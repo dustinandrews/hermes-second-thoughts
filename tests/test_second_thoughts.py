@@ -89,7 +89,7 @@ class TestRulesData:
     def test_default_families_present(self):
         rules = _load_rules()
         names = {r["name"] for r in rules.load_rules()}
-        for family in ("pipe-interpreter", "inline-c", "heredoc", "curl-bash", "rm-rf", "tmp"):
+        for family in ("pipe-interpreter", "inline-c", "heredoc", "execute-code-heredoc", "curl-bash", "rm-rf", "tmp"):
             assert family in names, family
 
     def test_default_messages_start_with_on_second_thought(self):
@@ -187,6 +187,14 @@ class TestMatch:
         assert rules.match("rm -rf /tmp/scratch")[0] == "rm-rf"
         assert rules.match("cd /tmp")[0] == "tmp"
         assert rules.match("echo hi > /tmp/scratch/x.txt")[0] == "tmp"
+
+    def test_execute_code_heredoc_matches(self):
+        rules = _load_rules()
+        # the flagged variant: execute_code <<'PY' ... PY
+        assert rules.match("execute_code <<'PY'")[0] == "execute-code-heredoc"
+        assert rules.match("execute_code <<PY")[0] == "execute-code-heredoc"
+        # python heredoc still its own family, not this one
+        assert rules.match("python3 <<'PY'")[0] == "heredoc"
 
 
 # ---------------------------------------------------------------------------

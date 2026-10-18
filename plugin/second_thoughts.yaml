@@ -15,6 +15,10 @@
   regex: '\b(python[23]?|perl|ruby|node)\s*<<'
   message: "On second thought, you can't feed a heredoc to an interpreter. Use the execute_code tool or write a .py script and run it via terminal."
 
+- name: execute-code-heredoc
+  regex: '\bexecute_code\b\s*<<'
+  message: "On second thought, you can't feed a heredoc into execute_code. Use read_file for reading files, or write a small explicit execute_code block without a shell heredoc."
+
 - name: curl-bash
   regex: '\b(curl|wget)\b.*\|\s*(ba)?sh\b'
   message: "On second thought, you can't pipe curl/wget output straight into a shell. Download the file, inspect it, then run it — or use a script."
