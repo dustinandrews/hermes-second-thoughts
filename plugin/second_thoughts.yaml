@@ -1,0 +1,24 @@
+# second-thoughts default rules.
+# Entry schema: name (unique), regex (regex matched against the terminal command text),
+# message (the redirect text the agent receives when the call is blocked).
+# Copy this file to ~/.hermes/second-thoughts.yaml to customize; per-entry the user file wins.
+
+- name: pipe-interpreter
+  regex: '\|\s*(python[23]?(\.[0-9]+)?|perl|ruby|node)\b'
+  message: "On second thought, you can't pipe stdin to a Python/Node/Perl/Ruby interpreter. Use the execute_code tool or write a .py script and run it via terminal."
+
+- name: inline-c
+  regex: '\b(python[23]?|perl|ruby|node)\s+-[ce]\s+'
+  message: "On second thought, you can't run inline code with -c/-e. Use the execute_code tool instead."
+
+- name: heredoc
+  regex: '\b(python[23]?|perl|ruby|node)\s*<<'
+  message: "On second thought, you can't feed a heredoc to an interpreter. Use the execute_code tool or write a .py script and run it via terminal."
+
+- name: curl-bash
+  regex: '\b(curl|wget)\b.*\|\s*(ba)?sh\b'
+  message: "On second thought, you can't pipe curl/wget output straight into a shell. Download the file, inspect it, then run it — or use a script."
+
+- name: rm-rf
+  regex: '\brm\s+(-[a-z]*r[a-z]*f[a-z]*|-[a-z]*f[a-z]*r[a-z]*|-[rfd](?:\s+-[rfd])+)\b'
+  message: "On second thought, you can't use rm -rf (recursive force delete). Delete paths explicitly instead."
