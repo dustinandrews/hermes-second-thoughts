@@ -23,24 +23,25 @@ A reader can install, configure (rules, user-override, allow-overrides, audit lo
 3. **Given** `CHANGELOG.md`, **When** read, **Then** it summarises sprints 001-004 under version 0.2.0.
 
 ### User Story 3 - Installable from git and published (P1)
-The layout is proven installable via the `hermes plugins install <owner>/<repo>/<subdir>` path (verified locally), and the code is pushed to GitHub under `dustinandrews/second-thoughts`, tagged `v0.2.0`.
+The layout is proven installable via the `hermes plugins install <owner>/<repo>/<subdir>` path (verified locally), and the code is pushed to GitHub under `dustinandrews/hermes-second-thoughts`, tagged `v0.2.0`.
 
 **Acceptance Scenarios**:
-1. **Given** a local git URL for this repo, **When** `hermes plugins install` is pointed at `<owner>/second-thoughts/plugin`, **Then** the plugin installs and `hermes plugins validate` passes on the installed copy (layout is publish-ready).
-2. **Given** the GitHub empty repo `dustinandrews/second-thoughts` (user-created), **When** the branch is pushed, **Then** `main` and tag `v0.2.0` appear on the remote and `git ls-remote git@github.com:dustinandrews/second-thoughts.git` shows them.
+1. **Given** a local git URL for this repo, **When** `hermes plugins install` is pointed at `<owner>/hermes-second-thoughts/plugin`, **Then** the plugin installs and `hermes plugins validate` passes on the installed copy (layout is publish-ready).
+2. **Given** the GitHub empty repo `dustinandrews/hermes-second-thoughts` (user-created), **When** the branch is pushed, **Then** `main` and tag `v0.2.0` appear on the remote and `git ls-remote git@github.com:dustinandrews/hermes-second-thoughts.git` shows them.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
-- **FR-001**: Remove session-scaffold/internal files from the tree: `specs/000---example-sprint/`, `HANDOFF_RESUME.md`, `PRODUCT_PLAN.md`, `TECH_STACK.md` (committed as deletions; recoverable in history). `AGENTS.md`, `MISFIRE.md`, `WHAT_AND_WHY.md` remain.
+- **FR-001**: Remove session-scaffold/internal files from the tree: `specs/000---example-sprint/`, `HANDOFF_RESUME.md`, `PRODUCT_PLAN.md` (committed as deletions; recoverable in history). `AGENTS.md`, `MISFIRE.md`, `WHAT_AND_WHY.md`, `README.md`, `TECH_STACK.md` remain public. (TECH_STACK.md is KEPT — constitution VIII requires a documented tech stack; do not delete it.)
 - **FR-002**: `.gitignore` covers `__pycache__/`, `*.pyc`, `.pytest_cache/`; verify nothing cached is tracked.
-- **FR-003**: Bump `plugin/plugin.yaml` version `0.1.0` → `0.2.0`; set `homepage` to `https://github.com/dustinandrews/second-thoughts` (owner confirmed `dustinandrews`); refresh `description` to reflect execute_code interception, allow-overrides, audit log, and misfire escalation.
+- **FR-003**: **Rename the plugin to `hermes-second-thoughts`** (owner-confirmed): `plugin/plugin.yaml` `name: hermes-second-thoughts`, `version: "0.2.0"`, `homepage: https://github.com/dustinandrews/hermes-second-thoughts`, `author: dustinandrews`; refresh `description` to reflect execute_code interception, allow-overrides, audit log, and misfire escalation.
 - **FR-004**: Rewrite `README.md` per US2 (fresh install → config → behaviour → tests), accurate current surface (45 tests).
 - **FR-005**: Add `LICENSE` (MIT, matches manifest) and `CHANGELOG.md` (0.2.0 covering sprints 001-004).
-- **FR-006**: Prove the git-install layout: `hermes plugins install <owner>/second-thoughts/plugin` against a local git URL succeeds and the installed copy validates.
+- **FR-006**: Prove the git-install layout: `hermes plugins install <owner>/hermes-second-thoughts/plugin` against a local git URL succeeds and the installed copy validates.
 - **FR-007**: Tag `v0.2.0` at the merge commit.
-- **FR-008**: Push `main` + tags to `git@github.com:dustinandrews/second-thoughts.git` once the empty repo exists; verify via `git ls-remote`.
+- **FR-008**: Push `main` + tags to `git@github.com:dustinandrews/hermes-second-thoughts.git` once the empty repo exists; verify via `git ls-remote`.
 - **FR-009**: No functional/behaviour change to the plugin (regression: full suite stays green 45/45; `hermes plugins validate ./plugin` clean). Pure packaging/pub.
+- **FR-010**: Reinstall the LIVE plugin under the new name: `~/.hermes/plugins/hermes-second-thoughts/` (directory = manifest name, to avoid the enable/list key mismatch), deploy sprint-004 code, enable `hermes-second-thoughts`, retire the old `second-thoughts` install.
 
 ### Success Criteria *(mandatory)*
 - **SC-001**: `git clean`-style inspection shows no tracked cruft and a sane tree; deletions are staged as removals (not blobs of content).
