@@ -7,7 +7,7 @@
 
 ### Phase 1 — Packaging: manifest rename + cleanup (FR-003, FR-001, SC-001)
 - [ ] **T001** [P1] `plugin/plugin.yaml`: `name: hermes-second-thoughts`, `version: "0.2.0"`, `homepage: https://github.com/dustinandrews/hermes-second-thoughts`, `author: dustinandrews`, refresh description (execute_code, overrides, audit, misfire).
-- [ ] **T002** [P1] delete scaffold: `git rm -r specs/000---example-sprint/`, `git rm HANDOFF_RESUME.md PRODUCT_PLAN.md`; verify `TECH_STACK.md`/`AGENTS.md`/`MISFIRE.md`/`WHAT_AND_WHY.md` retained; verify no `__pycache__`/`.pytest_cache`/`.pyc` tracked (SC-001).
+- [ ] **T002** [P1] delete scaffold: `git rm -r specs/000---example-sprint/`, `git rm HANDOFF_RESUME.md PRODUCT_PLAN.md`; verify `TECH_STACK.md`/`AGENTS.md`/`MISFIRE.md`/`WHAT_AND_WHY.md` retained; confirm `.gitignore` covers `__pycache__/`, `*.pyc`, `.pytest_cache/` (edit if not) and verify none of those are tracked (SC-001, FR-002).
 
 ### Phase 2 — Docs (US2, FR-004/FR-005, SC-002)
 - [ ] **T003** [P1] add `LICENSE` (MIT).

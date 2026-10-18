@@ -46,7 +46,7 @@ The layout is proven installable via the `hermes plugins install <owner>/<repo>/
 ### Success Criteria *(mandatory)*
 - **SC-001**: `git clean`-style inspection shows no tracked cruft and a sane tree; deletions are staged as removals (not blobs of content).
 - **SC-002**: `README.md`, `LICENSE`, `CHANGELOG.md`, and `plugin/plugin.yaml` all present with accurate, consistent content (version 0.2.0, owner dustinandrews); docs reference the three config files accurately.
-- **SC-003**: A local `hermes plugins install <owner>/second-thoughts/plugin` (via a local git URL) installs and the installed copy passes `hermes plugins validate`; `pytest tests/ -q` = 45 passed.
+- **SC-003**: A local `hermes plugins install <owner>/hermes-second-thoughts/plugin` (via a local git URL) installs and the installed copy passes `hermes plugins validate`; `pytest tests/ -q` = 45 passed.
 - **SC-004**: After the user creates the empty remote repo, push succeeds and `git ls-remote` shows `main` + `v0.2.0`; `hermes plugins doctor` lists the installed plugin.
 
 ## Review Result
