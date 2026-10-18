@@ -260,7 +260,7 @@ class TestHook:
         mod = _load_plugin_init()
         result = mod._on_pre_tool_call(
             tool_name="execute_code",
-            args={"code": "code = \"\"\"do_stuff <<'PY'\"\"\""},
+            args={"code": 'import subprocess\nsubprocess.run("python3 <<\'PY\'")'},
         )
         assert result is not None and result["action"] == "block"
 
