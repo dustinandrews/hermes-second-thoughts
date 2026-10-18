@@ -311,8 +311,7 @@ class TestHotReload:
         store = rules.RuleStore(default_path=dflt, override_path_provider=lambda: ovr)
         store.match("aaa")
         assert store.match("aaa")[0] == "block-a"
-        os.remove(dflt)
-        os.remove(ovr)
+        os.remove(dflt)  # override never existed -> both now absent
         with caplog.at_level("WARNING"):
             hit = store.match("aaa")
         assert hit and hit[0] == "block-a"  # last-good retained, guardrail stays up
