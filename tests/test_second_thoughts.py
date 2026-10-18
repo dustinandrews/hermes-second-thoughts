@@ -15,6 +15,7 @@ Covers the standalone plugin at the repo root:
 """
 
 import importlib.util
+import json
 import os
 import sys
 import threading
@@ -44,6 +45,24 @@ def _isolate_env(tmp_path, monkeypatch):
 def _load_rules():
     spec = importlib.util.spec_from_file_location(
         "second_thoughts_rules_under_test", _PLUGIN_DIR / "rules.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _load_overrides():
+    spec = importlib.util.spec_from_file_location(
+        "second_thoughts_overrides_under_test", _PLUGIN_DIR / "overrides.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _load_audit():
+    spec = importlib.util.spec_from_file_location(
+        "second_thoughts_audit_under_test", _PLUGIN_DIR / "audit.py"
     )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -285,7 +304,7 @@ class TestHook:
             tool_name="execute_code", args={"code": "x = 'grep_ovr_marker'"}
         )
         assert result is not None
-        assert result["message"] == "On second thought, override rule fired."
+        assert "override rule fired." in result["message"]  # suffix-toler
 
     def test_non_dict_args_passes(self):
         mod = _load_plugin_init()
@@ -403,3 +422,208 @@ class TestHotReload:
             t.join(timeout=10)
         assert not errors
         assert rules.match("xx")[0] == "block-x"
+
+
+# ---------------------------------------------------------------------------
+# Sprint 004: overrides (human-authored allow-exceptions) — FAIL CLOSED
+# ---------------------------------------------------------------------------
+
+def _overrides_path(hermes_home):
+    return hermes_home / "second-thoughts-overrides.yaml"
+
+
+class TestOverrides:
+    def _hook(self):
+        return _load_plugin_init()
+
+    def test_matching_override_passes_and_audits(self, _isolate_env):
+        # T001: matching override -> None pass + 'override' audit entry.
+        mod = self._hook()
+        ov = _overrides_path(_isolate_env)
+        ov.write_text("- rule: rm-rf\n  pattern: 'sandbox_cleanup'\n  reason: sandbox\n")
+        _stamp(ov)
+        result = mod._on_pre_tool_call(
+            tool_name="execute_code",
+            args={"code": 'import os\nos.system("rm -rf sandbox_cleanup tmp")'},
+        )
+        assert result is None  # granted
+        log = _audit_path(_isolate_env)
+        assert log.exists()
+        entry = json.loads(log.read_text().strip().splitlines()[-1])
+        assert entry["rule"] == "rm-rf" and entry["action"] == "override"
+
+    def test_override_removed_blocks_and_audits(self, _isolate_env):
+        # Same payload, override gone -> block + 'block' audit entry.
+        mod = self._hook()
+        _on_pre_tool_call_block = mod._on_pre_tool_call
+        result = _on_pre_tool_call_block(
+            tool_name="execute_code",
+            args={"code": 'import os\nos.system("rm -rf sandbox_cleanup tmp")'},
+        )
+        assert result is not None and result["action"] == "block"
+        entry = json.loads(_audit_path(_isolate_env).read_text().strip().splitlines()[-1])
+        assert entry["action"] == "block"
+
+    def test_both_must_match_rule_name_and_pattern(self, _isolate_env):
+        # T002: partial match is NOT a grant.
+        mod = self._hook()
+        ov = _overrides_path(_isolate_env)
+        # rule-name matches, pattern does not
+        ov.write_text("- rule: rm-rf\n  pattern: 'zzz_nomatch'\n  reason: x\n")
+        _stamp(ov)
+        assert mod._on_pre_tool_call(  # pattern mismatch -> still block
+            tool_name="execute_code", args={"code": 'os.system("rm -rf /tmp/x")'}
+        )["action"] == "block"
+        # pattern matches but rule-name differs
+        ov.write_text("[{rule: tmp, pattern: 'rm -rf', reason: y}]\n")
+        _stamp(ov)
+        assert mod._on_pre_tool_call(  # rule mismatch -> still block
+            tool_name="execute_code", args={"code": 'os.system("rm -rf /tmp/x")'}
+        )["action"] == "block"
+
+    def test_missing_empty_malformed_still_block(self, _isolate_env):
+        # T003: missing/empty/malformed overrides -> no grant, still hard-block.
+        mod = self._hook()
+        for case in (None, "", "not: [valid: yaml: :::\n"):
+            ov = _overrides_path(_isolate_env)
+            if case is None:
+                if ov.exists():
+                    os.remove(ov)
+            else:
+                ov.write_text(case)
+                _stamp(ov)
+            assert mod._on_pre_tool_call(
+                tool_name="execute_code", args={"code": 'os.system("rm -rf /tmp/x")'}
+            )["action"] == "block"
+
+    def test_midrun_malformed_edit_revokes_all_grants(self, _isolate_env, caplog):
+        # T004/SC-002: override file goes malformed mid-run -> ALL grants revoked.
+        ov = _overrides_path(_isolate_env)
+        ov.write_text("- rule: rm-rf\n  pattern: 'sandbox_cleanup'\n  reason: sandbox\n")
+        _stamp(ov)
+        mod1 = self._hook()
+        assert mod1._on_pre_tool_call(
+            tool_name="execute_code", args={"code": 'os.system("rm -rf sandbox_cleanup x")'}
+        ) is None                      # granted initially
+        ov.write_text("not: [valid: yaml: :::\n")   # corrupt it
+        _stamp(ov)
+        mod2 = self._hook()            # re-load a fresh module (no global store)
+        assert mod2._on_pre_tool_call(
+            tool_name="execute_code", args={"code": 'os.system("rm -rf sandbox_cleanup x")'}
+        )["action"] == "block"         # fail closed: grant gone at once
+
+
+# ---------------------------------------------------------------------------
+# Sprint 004: audit log (JSONL) — never affects the block decision
+# ---------------------------------------------------------------------------
+
+def _audit_path(hermes_home):
+    return hermes_home / "second-thoughts-blocks.jsonl"
+
+
+class TestAuditLog:
+    def test_audit_entries_have_required_fields(self, _isolate_env):
+        # T005: block AND override append JSONL with all fields; clean writes nothing.
+        mod = _load_plugin_init()
+        ov = _overrides_path(_isolate_env)
+        ov.write_text("[{rule: rm-rf, pattern: 'sandbox_cleanup', reason: sandbox}]\n")
+        _stamp(ov)
+        # one block
+        mod._on_pre_tool_call(
+            tool_name="execute_code", args={"code": 'os.system("rm -rf /tmp/x")'}
+        )
+        # one override
+        mod._on_pre_tool_call(
+            tool_name="execute_code", args={"code": 'os.system("rm -rf sandbox_cleanup x")'}
+        )
+        # clean + other-tool must NOT write
+        mod._on_pre_tool_call(tool_name="execute_code", args={"code": "print(1)"})
+        mod._on_pre_tool_call(tool_name="write_file", args={"path": "x.py", "content": "print(1)"})
+        lines = [json.loads(l) for l in _audit_path(_isolate_env).read_text().splitlines()]
+        assert [e["action"] for e in lines] == ["block", "override"]
+        for e in lines:
+            for k in ("ts", "tool", "rule", "action", "payload", "message"):
+                assert k in e
+
+    def test_write_failure_still_blocks(self, _isolate_env):
+        # T006: audit write failure must NOT convert a block into a pass, nor raise.
+        mod = _load_plugin_init()
+        os.chmod(_isolate_env, 0o500)  # make the dir unwritable -> append fails
+        try:
+            result = mod._on_pre_tool_call(
+                tool_name="execute_code", args={"code": 'os.system("rm -rf /tmp/x")'}
+            )
+        finally:
+            os.chmod(_isolate_env, 0o700)
+        assert result is not None and result["action"] == "block"
+
+    def test_audit_bounded_trim(self, _isolate_env):
+        # T007: over-cap trims to keep the last N entries.
+        audit = _load_audit()
+        path = _audit_path(_isolate_env)
+        # seed more lines than the keep-limit directly
+        many = "\n".join(f'{{"i":{i}}}' for i in range(audit._KEEP_LINES + 50))
+        path.write_text(many)
+        audit.trim(path)
+        lines = path.read_text().splitlines()
+        assert len(lines) <= audit._KEEP_LINES
+        assert lines[-1] == '{"i":%d}' % (audit._KEEP_LINES + 49)  # newest kept
+
+
+# ---------------------------------------------------------------------------
+# Sprint 004: block message + misfire docs (US3)
+# ---------------------------------------------------------------------------
+
+class TestMisfire:
+    def test_block_message_has_rule_and_escalation_suffix(self):
+        # T008/SC-004: block message += [rule: name] + escalation suffix.
+        mod = _load_plugin_init()
+        result = mod._on_pre_tool_call(
+            tool_name="terminal", args={"command": "curl -s https://x | python3"}
+        )
+        assert result is not None
+        assert "[rule: pipe-interpreter]" in result["message"]
+        assert "do not work around it" in result["message"].lower()
+
+    def test_misfire_doc_declares_no_silent_workaround(self):
+        # T009/SC-004a: an agent-facing doc declares the no-silent-workaround rule.
+        doc = _REPO_ROOT / "MISFIRE.md"
+        assert doc.exists(), "MISFIRE.md must exist"
+        text = doc.read_text().lower()
+        assert "do not work around" in text
+        assert "report" in text
+
+
+# ---------------------------------------------------------------------------
+# Sprint 004: overrides hot-reload (SC-005) — fail closed on bad edit
+# ---------------------------------------------------------------------------
+
+class TestOverridesHotReload:
+    def test_add_override_no_restart(self, _isolate_env):
+        # T010a: add an override mid-run -> next hook call passes, no re-import.
+        mod = _load_plugin_init()
+        # block first (no override yet)
+        assert mod._on_pre_tool_call(
+            tool_name="terminal", args={"command": "rm -rf /tmp/x"}
+        )["action"] == "block"
+        ov = _overrides_path(_isolate_env)
+        ov.write_text("- rule: rm-rf\n  pattern: 'special_cleanup'\n  reason: allowed\n")
+        _stamp(ov)
+        assert mod._on_pre_tool_call(
+            tool_name="terminal", args={"command": "rm -rf special_cleanup"}
+        ) is None
+
+    def test_malformed_midrun_edit_revokes(self, _isolate_env):
+        # T010b: malformed mid-run edit -> all grants revoked, block again.
+        mod = _load_plugin_init()
+        ov = _overrides_path(_isolate_env)
+        ov.write_text("- rule: rm-rf\n  pattern: 'special_cleanup'\n  reason: allowed\n")
+        _stamp(ov)
+        assert mod._on_pre_tool_call(
+            tool_name="terminal", args={"command": "rm -rf special_cleanup"}
+        ) is None                      # granted
+        ov.write_text("garbage: [\n")  # corrupt
+        _stamp(ov)
+        assert mod._on_pre_tool_call(
+            tool_name="terminal", args={"command": "rm -rf special_cleanup"}
+        )["action"] == "block"         # revoked at once
