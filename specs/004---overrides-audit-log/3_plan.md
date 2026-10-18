@@ -31,7 +31,7 @@ Add (1) a human-authored overrides file (`$HERMES_HOME/second-thoughts-overrides
 - `README.md` or new `MISFIRE.md` — no-silent-workaround declaration (FR-009 / SC-004a).
 
 ## Tasks
-- **T1** (RED) overrides tests: matching override passes + audit `override` entry; same payload without override blocks + audit `block`; missing/empty/malformed overrides → block; mid-run malformed edit revokes all grants (fail closed).
+- **T1** (RED) overrides tests: matching override passes + audit `override` entry; same payload without override blocks + audit `block`; missing/empty/malformed overrides → block; mid-run malformed edit revokes all grants (fail closed). PLUS the both-must-match gate (DD-2): an override whose rule-name OR pattern mismatches (partial match) still hard-blocks.
 - **T2** (RED) audit tests: block and override write JSONL `{ts,tool,rule,action,payload,message}`; non-matching/other-tool write nothing; forced write-failure still blocks (does not pass); bounded (trim keeps last N).
 - **T3** (RED) message + docs tests (SC-004/SC-004a): block message contains rule name + escalation suffix; docs file contains no-silent-workaround declaration.
 - **T4** (RED) hot-reload/SC-005: add override → next hook call passes (no restart); malformed edit → all revoked (blocks).
