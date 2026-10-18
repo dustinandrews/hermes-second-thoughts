@@ -21,17 +21,25 @@ logger = logging.getLogger(__name__)
 
 
 def _on_pre_tool_call(tool_name: str = "", args: Any = None, **_: Any) -> Optional[Dict[str, str]]:
-    """Block matching terminal calls with the configured redirect; None = pass through."""
-    if tool_name != "terminal":
+    """Block matching terminal/execute_code calls; None = pass through.
+
+    `terminal` is scanned on `args.command`; `execute_code` on `args.code`.
+    Both share the same compiled rule set (sprint 002 hot-reload applies to
+    both). All other tools and non-matching payloads pass through untouched.
+    """
+    field = {"terminal": "command", "execute_code": "code"}.get(tool_name)
+    if field is None:
         return None
     if not isinstance(args, dict):
         return None
-    command = args.get("command")
-    hit = rules.match(command)
+    text = args.get(field)
+    if not isinstance(text, str):
+        return None
+    hit = rules.match(text)
     if hit is None:
         return None
     name, message = hit
-    logger.info("second-thoughts: blocked terminal call matching rule '%s'", name)
+    logger.info("second-thoughts: blocked %s call matching rule '%s'", tool_name, name)
     return {"action": "block", "message": message}
 
 
