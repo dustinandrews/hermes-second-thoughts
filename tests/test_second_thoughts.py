@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
+_PLUGIN_DIR = _REPO_ROOT / "plugin"
 
 
 @pytest.fixture(autouse=True)
@@ -39,7 +40,7 @@ def _isolate_env(tmp_path, monkeypatch):
 
 def _load_rules():
     spec = importlib.util.spec_from_file_location(
-        "second_thoughts_rules_under_test", _REPO_ROOT / "rules.py"
+        "second_thoughts_rules_under_test", _PLUGIN_DIR / "rules.py"
     )
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -53,12 +54,12 @@ def _load_plugin_init():
         sys.modules["hermes_plugins"] = ns
     spec = importlib.util.spec_from_file_location(
         "hermes_plugins.second_thoughts",
-        _REPO_ROOT / "__init__.py",
-        submodule_search_locations=[str(_REPO_ROOT)],
+        _PLUGIN_DIR / "__init__.py",
+        submodule_search_locations=[str(_PLUGIN_DIR)],
     )
     mod = importlib.util.module_from_spec(spec)
     mod.__package__ = "hermes_plugins.second_thoughts"
-    mod.__path__ = [str(_REPO_ROOT)]
+    mod.__path__ = [str(_PLUGIN_DIR)]
     sys.modules["hermes_plugins.second_thoughts"] = mod
     spec.loader.exec_module(mod)
     return mod

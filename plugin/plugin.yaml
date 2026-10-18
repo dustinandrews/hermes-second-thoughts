@@ -1,0 +1,16 @@
+name: second-thoughts
+version: "0.1.0"
+description: "Intercept terminal tool calls and hard-block banned patterns (pipe-to-interpreter, inline -c, heredoc, curl|bash, rm -rf) with a per-pattern 'On second thought...' redirect message. Runs via pre_tool_call before approval.py, which stays as backstop. Pattern list is YAML-configurable: shipped defaults + ~/.hermes/second-thoughts.yaml user override."
+author: "second-thoughts contributors"
+license: "MIT"
+homepage: "https://github.com/dustin-andrews/second-thoughts"
+tags:
+  - security
+  - guardrail
+  - terminal
+manifest_version: 2
+api_version: 1
+python_dependencies:
+  - "PyYAML>=6.0,<7"
+provides_hooks:
+  - pre_tool_call
