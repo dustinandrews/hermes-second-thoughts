@@ -26,12 +26,14 @@ Replace the current load-once module state (`RULES = compile_rules(load_rules())
 - `tests/test_second_thoughts.py` — extend with hot-reload cases.
 
 ## Tasks
-- **T1** `rules.py`: refactor module-level load into a guarded store with mtime cache + atomic swap + reload-on-change + keep-last-good; keep `match()` signature.
-- **T2** `rules.py`: reload failure path logs a warning and retains last-good (empty-first-load path stays as-is).
-- **T3** tests (RED): hot-reload — append a rule to a temp override, os.utime future-stamp it, `match()` returns the new rule without restart (SC-001).
-- **T4** tests (RED): keep-last-good — write invalid YAML to override after a good load; `match()` still blocks pipe-interpreter and a warning is emitted (SC-002); mid-run both-removed retains last-good (US2-2); initial both-absent inactive (US2-3); unchanged-config returns cached (no recompile observable via no new mtime change).
-- **T5** tests (RED): atomic-swap concurrency smoke — many threads match/reload concurrently without error or torn reads (FR-004), using tmp isolation.
-- **T6** validation: `pytest tests/ -q` all green incl. sprint-001 suite + `hermes plugins validate ./plugin` (doctor clean not required for this change; regression check only).
+- **T1** (RED) tests: hot-reload — append a rule to a temp override, os.utime future-stamp (nanoseconds, per F1), `match()` returns the new rule without restart (SC-001).
+- **T2** (RED) tests: keep-last-good — write invalid YAML to override after a good load; `match()` still blocks pipe-interpreter and a warning is emitted (SC-002); mid-run both-removed retains last-good (US2-2); initial both-absent inactive (US2-3); unchanged-config returns cached with no reload (no recompile).
+- **T3** (RED) tests: atomic-swap concurrency smoke — many threads match/reload concurrently without error or torn reads (FR-004).
+- **T4** (GREEN) `rules.py`: refactor module-level load into a guarded store — mtime cache + atomic swap + reload-on-change; keep `match()` signature.
+- **T5** (GREEN) `rules.py`: reload failure path logs a warning and retains last-good (empty-first-load path stays as-is).
+- **T6** (validation) `pytest tests/ -q` all green incl. sprint-001 suite + `hermes plugins validate ./plugin` (regression check only).
 
 ## Review Result
-STATUS: [PASS | FAIL]
+Round 1: STATUS: FAIL — TDD ordering violated (RED tests sequenced after GREEN implementation). Prescribed non-structural fix: reorder tasks to RED (T1–T3 tests) then GREEN (T4–T5 rules.py). Applied in-session.
+
+Round 2: STATUS: PASS — tests-first restored; design/coverage otherwise sound.
