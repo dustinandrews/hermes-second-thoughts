@@ -22,3 +22,7 @@
 - name: rm-rf
   regex: '\brm\s+(-[a-z]*r[a-z]*f[a-z]*|-[a-z]*f[a-z]*r[a-z]*|-[rfd](?:\s+-[rfd])+)\b'
   message: "On second thought, you can't use rm -rf (recursive force delete). Delete paths explicitly instead."
+
+- name: tmp
+  regex: '\b(cd|pushd)\s+/tmp\b|\b(touch|mkdir|mv|cp|tee)\s+[^\n]*/tmp/|\b(echo|cat|printf)\b[^\n]*\s*>>?\s*/tmp/'
+  message: "On second thought, stay out of /tmp. Use the configured scratch dir (~/.hermes/cache/scratch) for temporary files instead."

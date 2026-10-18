@@ -86,7 +86,7 @@ class TestRulesData:
     def test_default_families_present(self):
         rules = _load_rules()
         names = {r["name"] for r in rules.load_rules()}
-        for family in ("pipe-interpreter", "inline-c", "heredoc", "curl-bash", "rm-rf"):
+        for family in ("pipe-interpreter", "inline-c", "heredoc", "curl-bash", "rm-rf", "tmp"):
             assert family in names, family
 
     def test_default_messages_start_with_on_second_thought(self):
@@ -182,6 +182,8 @@ class TestMatch:
     def test_rm_rf_matches(self):
         rules = _load_rules()
         assert rules.match("rm -rf /tmp/scratch")[0] == "rm-rf"
+        assert rules.match("cd /tmp")[0] == "tmp"
+        assert rules.match("echo hi > /tmp/scratch/x.txt")[0] == "tmp"
 
 
 # ---------------------------------------------------------------------------
