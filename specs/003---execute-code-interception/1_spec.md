@@ -29,13 +29,15 @@ Adding execute_code interception must not regress the terminal path or break the
 - **FR-003**: Non-matching calls and all other tools MUST pass through unchanged (`None`).
 - **FR-004**: On a match the hook MUST hard-block with the configured per-pattern message and the call MUST NOT execute.
 - **FR-005**: The shared YAML rule set and sprint-002 hot-reload MUST continue to apply to both tool types (rule edits live for both).
-- **FR-006**: No separate per-tool rule lists or new config schema in this sprint (YAGNI); a documented, configurable false-positive tradeoff is accepted for code-payload scanning.
+- **FR-006**: No separate per-tool rule lists or new config schema in this sprint (YAGNI); the false-positive tradeoff for code-payload scanning is accepted and adjustable only by editing the shared YAML rules (which also affects terminal matching).
 - **FR-007**: Terminal behaviour MUST be regression-free (existing suite stays green; the sprint-001 "execute_code passes" semantics test is updated to "clean execute_code passes").
 - **FR-008**: Script-file write interception (`write_file` producing `.py`/`.sh`) is EXPLICITLY out of scope (future item).
 
 ### Success Criteria *(mandatory)*
 - **SC-001**: The automated suite shows an `execute_code` code payload containing an embedded banned pattern returns the block directive with that rule's message; a clean payload returns `None`; another tool returns `None`.
 - **SC-002**: A live/product-style check (isolated temp HERMES_HOME) shows a rule added via the user override applies to an `execute_code` payload via hot-reload without a restart, and the full suite stays green.
+
+> **Deploy note**: YAML rule edits hot-reload via mtime (sprint 002). The NEW hook logic (execute_code scanning in `__init__.py`) is Python code and requires a gateway restart to load — the same symlink/restart distinction as any code change.
 
 ## Review Result
 STATUS: [PASS | FAIL]
