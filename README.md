@@ -2,7 +2,7 @@
 
 A [Hermes](https://hermes-agent.nousresearch.com) guardrail plugin that intercepts
 `terminal` commands **and** `execute_code` payloads and **hard-blocks banned
-patterns** with a per-pattern *"On second thought…"* redirect — so the agent
+patterns** with a per-pattern *"On second thought…"* redirect, so the agent
 re-plans to a compliant path (a utility script, `read_file`, etc.) instead of
 retrying a terse denial or sneaking around it.
 
@@ -14,7 +14,7 @@ retrying a terse denial or sneaking around it.
     the agent stops and *reports* a suspected false positive instead of
     working around the guard.
 - **Human-authored allow-overrides** let a specific, false-positive payload
-  through — narrow (rule *and* pattern must match) and **fail-closed**.
+  through: narrow (rule *and* pattern must match) and **fail-closed**.
 - **Audit log**: every block and override grant is recorded for detection.
 
 ## Install
@@ -81,18 +81,18 @@ failure never changes the block decision.
 
 - On a match the hook returns a block directive; nothing executes.
 - The block message ends with `[rule: <name>]` and the directive *"If you
-  believe this is a misfire, stop and report it; do not work around it."* — do
+  believe this is a misfire, stop and report it; do not work around it."* Do
   not silently reword or re-route around a guard. See [`MISFIRE.md`](./MISFIRE.md).
 
 ## Default rules seeded
 
-- `pipe-interpreter` — `| python`, `| perl`, `| ruby`, `| node`
-- `inline-c` — `python -c`, `perl -e`, …
-- `heredoc` — heredoc into an interpreter (`python <<…`)
-- `execute-code-heredoc` — `execute_code <<…`
-- `curl-bash` — `curl|wget` piped into a shell
-- `rm-rf` — force-recursive deletes
-- `tmp` — stay out of `/tmp` (redirects to `~/.hermes/cache/scratch`)
+- `pipe-interpreter` : `| python`, `| perl`, `| ruby`, `| node`
+- `inline-c` : `python -c`, `perl -e`, …
+- `heredoc` : heredoc into an interpreter (`python <<…`)
+- `execute-code-heredoc` : `execute_code <<…`
+- `curl-bash` : `curl|wget` piped into a shell
+- `rm-rf` : force-recursive deletes
+- `tmp` : stay out of `/tmp` (redirects to `~/.hermes/cache/scratch`)
 
 ## Develop
 
@@ -112,10 +112,10 @@ into place:
 
 ## Docs
 
-- [`MISFIRE.md`](./MISFIRE.md) — no-silent-workaround rule + override flow
-- [`WHAT_AND_WHY.md`](./WHAT_AND_WHY.md) — purpose and definition of success
-- [`TECH_STACK.md`](./TECH_STACK.md) — dependencies and layout
-- [`CHANGELOG.md`](./CHANGELOG.md) — release history
-- [`AGENTS.md`](./AGENTS.md) — instructions for agent contributors
-- `specs/` — sprint artifacts (spec, plan, tasks, reviews) per the short-sprint
+- [`MISFIRE.md`](./MISFIRE.md) : no-silent-workaround rule + override flow
+- [`WHAT_AND_WHY.md`](./WHAT_AND_WHY.md) : purpose and definition of success
+- [`TECH_STACK.md`](./TECH_STACK.md) : dependencies and layout
+- [`CHANGELOG.md`](./CHANGELOG.md) : release history
+- [`AGENTS.md`](./AGENTS.md) : instructions for agent contributors
+- `specs/` : sprint artifacts (spec, plan, tasks, reviews) per the short-sprint
   method
