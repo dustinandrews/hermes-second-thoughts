@@ -1,13 +1,14 @@
-name: second-thoughts
-version: "0.1.0"
-description: "Intercept terminal tool calls and hard-block banned patterns (pipe-to-interpreter, inline -c, heredoc, curl|bash, force-recursive deletes) with a per-pattern 'On second thought...' redirect message. Runs via pre_tool_call before approval.py, which stays as backstop. Pattern list is YAML-configurable: shipped defaults + ~/.hermes/second-thoughts.yaml user override."
-author: "second-thoughts contributors"
+name: hermes-second-thoughts
+version: "0.2.0"
+description: "A pre_tool_call guardrail that hard-blocks banned command/code patterns (pipe-to-interpreter, inline -c/-e, heredoc, curl|bash, force-recursive deletes, stay-out-of-/tmp) with a per-pattern 'On second thought...' redirect PLUS a [rule: name] and a misfire-escalation directive. Scans both terminal commands and execute_code payloads, before approval.py which stays as backstop. YAML-configurable: shipped defaults + user override file; narrow human-authored allow-overrides (fail closed) and a JSONL audit log of every block/override grant. Runs as a minimal stdlib+PyYAML standalone plugin via the pre_tool_call hook."
+author: "dustinandrews"
 license: "MIT"
-homepage: "https://github.com/dustin-andrews/second-thoughts"
+homepage: "https://github.com/dustinandrews/hermes-second-thoughts"
 tags:
   - security
   - guardrail
   - terminal
+  - hook
 manifest_version: 2
 api_version: 1
 python_dependencies:
