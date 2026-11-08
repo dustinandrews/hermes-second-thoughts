@@ -5,6 +5,13 @@ All notable changes to **second-thoughts** are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and this
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-10-19
+
+### Added
+- **`naked-http` rule**: hard-blocks naked `http://` URLs (unencrypted) and
+  redirects to `https://`, or asks the agent to report the unsafe URL. Ships in
+  the default `second_thoughts.yaml`; hot-reloads like the other rules.
+
 ## [0.2.0] - 2026-10-18
 
 ### Added

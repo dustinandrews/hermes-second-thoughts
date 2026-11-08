@@ -108,7 +108,7 @@ class TestRulesData:
     def test_default_families_present(self):
         rules = _load_rules()
         names = {r["name"] for r in rules.load_rules()}
-        for family in ("pipe-interpreter", "inline-c", "heredoc", "execute-code-heredoc", "curl-bash", "rm-rf", "tmp"):
+        for family in ("pipe-interpreter", "inline-c", "heredoc", "execute-code-heredoc", "curl-bash", "naked-http", "rm-rf", "tmp"):
             assert family in names, family
 
     def test_default_messages_start_with_on_second_thought(self):
@@ -200,6 +200,17 @@ class TestMatch:
     def test_curl_bash_matches(self):
         rules = _load_rules()
         assert rules.match("curl -sL https://x | bash")[0] == "curl-bash"
+
+    def test_naked_http_matches(self):
+        rules = _load_rules()
+        assert rules.match("curl -s http://example.com/data")[0] == "naked-http"
+        assert rules.match("wget -q http://example.com/file")[0] == "naked-http"
+
+    def test_https_not_matched(self):
+        rules = _load_rules()
+        # https:// must NOT trip the naked-http rule
+        assert rules.match("curl -s https://example.com/data") is None
+        assert rules.match("wget https://example.com/file") is None
 
     def test_rm_rf_matches(self):
         rules = _load_rules()

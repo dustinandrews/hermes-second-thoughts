@@ -23,6 +23,10 @@
   regex: '\b(curl|wget)\b.*\|\s*(ba)?sh\b'
   message: "On second thought, you can't pipe curl/wget output straight into a shell. Download the file, inspect it, then run it — or use a script."
 
+- name: naked-http
+  regex: 'http://'
+  message: "On second thought, you can't use a naked http:// URL (unencrypted traffic). Try https:// instead. If the site genuinely has no https endpoint, report the unsafe URL to the user rather than fetching it."
+
 - name: rm-rf
   regex: '\brm\s+(-[a-z]*r[a-z]*f[a-z]*|-[a-z]*f[a-z]*r[a-z]*|-[rfd](?:\s+-[rfd])+)\b'
   message: "On second thought, you can't use rm -rf (recursive force delete). Delete paths explicitly instead."

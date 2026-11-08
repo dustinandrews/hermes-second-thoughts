@@ -91,6 +91,7 @@ failure never changes the block decision.
 - `heredoc` : heredoc into an interpreter (`python <<…`)
 - `execute-code-heredoc` : `execute_code <<…`
 - `curl-bash` : `curl|wget` piped into a shell
+- `naked-http` : naked `http://` URLs (try `https://`, or report the unsafe URL)
 - `rm-rf` : force-recursive deletes
 - `tmp` : stay out of `/tmp` (redirects to `~/.hermes/cache/scratch`)
 
@@ -116,6 +117,5 @@ into place:
 - [`WHAT_AND_WHY.md`](./WHAT_AND_WHY.md) : purpose and definition of success
 - [`TECH_STACK.md`](./TECH_STACK.md) : dependencies and layout
 - [`CHANGELOG.md`](./CHANGELOG.md) : release history
-- [`AGENTS.md`](./AGENTS.md) : instructions for agent contributors
 - `specs/` : sprint artifacts (spec, plan, tasks, reviews) per the short-sprint
   method
